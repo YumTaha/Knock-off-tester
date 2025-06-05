@@ -26,6 +26,7 @@ void loop() {
   gcodeSerialLoop(); // Handles incoming G-code
 
   int potValue = analogRead(potPin);
+
   if (potValue < 59) potValue = 59; 
   if (potValue > 217) potValue = 217;
   float percent = map(potValue, 59, 217, 0, 100); // Shaved 2 values from the range read by analog for safety
