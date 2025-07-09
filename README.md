@@ -20,12 +20,6 @@ Personal notes for RevPi actuator control scripts.
 
 ---
 
-## task_control.py Usage
-
-### Quick Start
-```bash
-python task_control.py
-```
 
 ### Commands
 | Command | Example | Description |
@@ -51,12 +45,6 @@ python task_control.py
 
 ---
 
-## minimized_control.py Usage
-
-### Quick Start
-```bash
-python minimized_control.py
-```
 
 ### Features
 - **DEMO_MODE = 1**: Automatic movement sequence
