@@ -1,7 +1,4 @@
-"""
-This file is a duplicate of position_control.py, just minimized for simpler usage.
-All core functionality remains the same but with reduced code complexity.
-"""
+#!/usr/bin/env python3
 import time, signal, revpimodio2
 from simple_pid import PID
 from calibration import load_calibration, analog_to_mm
@@ -10,7 +7,7 @@ from calibration import load_calibration, analog_to_mm
 DEMO_MODE = 2      # 1 = auto-move demo, 2 = interactive CLI
 
 # ── constants ───────────────────────────────────────────────
-STROKE_MM      = 130.0
+STROKE_MM      = 146.0
 PWM_DEADBAND   = 10
 SOFT_MARGIN_MM = 0.0          # set >0 if you want software end-stops
 
@@ -31,7 +28,7 @@ pos_pid.output_limits = (-500, 500)
 # ── helpers ─────────────────────────────────────────────────
 clamp      = lambda v: max(SOFT_MARGIN_MM, min(v, STROKE_MM - SOFT_MARGIN_MM))
 move_to    = lambda mm: pos_pid.__setattr__("setpoint", clamp(mm))
-stop       = lambda: (setattr(IO_PWM, "value", 0), setattr(IO_DIR, "value", 0))
+stop       = lambda: (setattr(IO_PWM, "value", 0), setattr(IO_DIR, "value", 0), setattr(pos_pid, "output_limits", (0, 0)))
 get_pos    = lambda: raw_to_mm(IO_POT_RAW.value)
 
 def set_max_pwm(limit: int):
@@ -70,7 +67,7 @@ def shutdown(*_):
     print("\n[system] Shutting down, actuator stopped.")
     _shutdown = True
     stop()
-    rpi.exit()
+    rpi.exit(full=True)
 
 for sig in (signal.SIGINT, signal.SIGTERM):
     signal.signal(sig, shutdown)
@@ -97,7 +94,7 @@ if __name__ == "__main__":
                 time.sleep(0.1)
                 try:
                     target = input(f"Target (30-{STROKE_MM} mm): ").strip()
-                    if not (30 <= float(target) <= STROKE_MM):
+                    if not (30.3 <= float(target) <= STROKE_MM):
                         print(f"Value must be between 30 and {STROKE_MM} mm.")
                         continue
                     move_to(float(target))
