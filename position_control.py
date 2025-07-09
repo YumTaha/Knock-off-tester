@@ -3,7 +3,7 @@ RevPiModIO2 closed-loop control for a DC-screw linear actuator
 ==============================================================
 
 This new control system allows you to update speed/position while the motor is running.
-
+Author: Roan
 """
 
 import time, signal, revpimodio2
