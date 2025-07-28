@@ -12,7 +12,7 @@ To run the code on the RevPi, you'll need to connect to it remotely using SSH. H
    pi@revpi111323.local
    ```
 7. When prompted, use the password:  `9glmsp`
-8. Once connected, open the project folder and run the Python script from the terminal.
+8. Once connected, open the project folder `"/home/pi/Documents/knockoff/"` and run the Python script from the terminal.
 
 ---
 
