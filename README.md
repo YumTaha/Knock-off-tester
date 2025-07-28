@@ -1,3 +1,21 @@
+## 🔌 How to Connect via SSH (using VS Code)
+
+To run the code on the RevPi, you'll need to connect to it remotely using SSH. Here's how:
+
+1. **Plug the RevPi into your network using an Ethernet cable.**
+2. **Install VS Code** (if you haven’t already)
+3. **Install the "Remote - SSH" extension** in VS Code
+4. **Open the Command Palette** in VS Code (Ctrl+Shift+P)
+5. Choose `Remote-SSH: Connect to Host...`
+6. Enter the connection string:
+   ```bash
+   pi@revpi111323.local
+   ```
+7. When prompted, use the password:  `9glmsp`
+8. Once connected, open the project folder and run the Python script from the terminal.
+
+---
+
 # 🦷 Mechanical Tooth Knock-Off Tester  
 ## 📘 What This Project Is For
 
@@ -56,7 +74,7 @@ It uses a **linear actuator** to slowly push into a tooth, while a **strain gaug
 ### 1. Start the script:
 
 ```bash
-python mechanical_tester.py
+python3 mechanical_tester.py
 ```
 
 ### 2. Type a command when prompted:
@@ -147,6 +165,5 @@ pip install revpimodio2 pymodbus simple-pid numpy pandas matplotlib
 - Check CSVs and plots to verify results.
 - If things break or stop working, **read the log messages** – they’re there to help.
 - Feel free to improve the script – like adding automation for running many cycles!
-- Feel free to reach out to me or ask ROAN!
 
-Good luck! 🛠️🦷💥
+Good luck with your weld testing! 🛠️🦷💥
