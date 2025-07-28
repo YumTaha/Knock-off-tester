@@ -1,3 +1,6 @@
 revpimodio2==2.8.0
 simple-pid==2.0.1
-numpy
+pymodbus==3.9.2
+numpy==2.3.1
+pandas==2.3.0
+matplotlib==3.10.3

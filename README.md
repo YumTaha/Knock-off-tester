@@ -1,142 +1,152 @@
-# Actuator Control System
+# 🦷 Mechanical Tooth Knock-Off Tester  
+## 📘 What This Project Is For
 
-Personal notes for RevPi actuator control scripts.
+This machine was built to **automatically knock off teeth from circular saw blades** and record how much force it takes. The goal is to **test how strong the welds are** between the blade and the teeth.
 
-## Files Overview
-
-### `task_control.py` - Modern Async Control
-**Minimal asyncio-based control with instant cancellation**
-
-- **Main goal**: Move to position (cancellable anytime) + set speed limit
-- **Key feature**: True async - can cancel moves instantly while they're happening
-- **Best for**: Interactive control, precise movements
-
-### `minimized_control.py` - Original Blocking Control  
-**Traditional blocking control with debug output**
-
-- **Main goal**: Position control with detailed debugging
-- **Key feature**: Verbose debug prints, blocking movement
-- **Best for**: Testing, debugging, understanding system behavior
+It uses a **linear actuator** to slowly push into a tooth, while a **strain gauge** measures the force. Once the tooth pops off (or the actuator reaches the end), it logs the data and resets for the next test.
 
 ---
 
+## 🧰 What’s Inside the Machine
 
-### Commands
-| Command | Example | Description |
-|---------|---------|-------------|
-| `<position>` | `50` | Move to 50mm (blocking) |
-| `speed <val>` | `speed 200` | Set max speed (0-1000) |
-| `cancel` | `cancel` | **Stop immediately** at current position |
-| `pos` | `pos` | Show current position |
-| `quit` | `quit` | Exit program |
+### 1. **Linear Actuator**
+- Physically pushes into the saw tooth.
+- Has a built-in potentiometer to track its position (how far it's moved).
+- Controlled by a **RevPi Connect 4** + **RevPi MIO**.
 
-### Key Features
-- **Instant cancellation**: Type `cancel` during any movement → stops immediately
-- **Speed control**: `speed 100` = slow, `speed 500` = fast
-- **Position deadband**: No hunting/jerking when at target (±0.5mm)
-- **Async**: Commands respond instantly, no blocking
+### 2. **Strain Gauge (Omega DP400S)**
+- Measures the force applied when the actuator pushes.
+- Connected using **Modbus RTU** on `/dev/ttyRS485`.
 
-### How Cancellation Works
-```
-> 100          # Start moving to 100mm
-> cancel       # IMMEDIATELY stops at current position (e.g., 67mm)
-> 50           # Now moves to 50mm from where it stopped
-```
+### 3. **RevPi (Revolution Pi)**
+- Acts as the brain of the machine.
+- Runs the Python code.
+- Handles motor control, position tracking, and data collection.
 
 ---
 
+## 📁 Files You Should Know
 
-### Features
-- **DEMO_MODE = 1**: Automatic movement sequence
-- **DEMO_MODE = 2**: Interactive CLI (enter target positions)
-- **Debug output**: Shows position, error, PWM, direction, raw values
-- **Blocking**: Must wait for movement to complete
-
-### Interactive Mode
-```
-Target (30-146 mm): 50
-[debug] Pos: 45.23mm | Target: 50.0mm | Error: +4.8mm | PID: +96.5 | PWM: 96% | Dir:EXT | Raw: 2847
-Target (30-146 mm): 80
-```
+| File | What It Does |
+|------|--------------|
+| `mechanical_tester.py` | Main script that runs everything – moves the actuator, reads force, detects when a tooth breaks off, and saves data. |
+| `calibration.py` | Converts raw analog values from the actuator into position (in mm) using the calibration data. |
+| `config.json` | Calibration data: maps analog voltage to real-world position in mm. |
 
 ---
 
-## Technical Details
+## 🔄 What Happens During a Test
 
-### Both Files Share
-- **PID Controller**: Kp=20, Ki=0, Kd=0.5
-- **PWM Range**: 0-1000 (but limited by `output_limits`)
-- **Stroke**: 146mm total travel
-- **Deadband**: 10 PWM units (prevents tiny movements)
-- **Calibration**: Uses `calibration.py` for raw→mm conversion
-
-### Key Differences
-
-| Feature | task_control.py | chatgpt_control.py |
-|---------|-----------------|-------------------|
-| **Cancellation** | ✅ Instant (async) | ❌ Must wait |
-| **Debug output** | ❌ Minimal | ✅ Verbose |
-| **Speed ramping** | ✅ Gentle ramp-down | ✅ Gentle ramp-down |
-| **Position deadband** | ✅ 0.5mm (no hunting) | ❌ Will hunt |
-| **Emergency stop** | ✅ Sets limits to (0,0) | ✅ Sets limits to (0,0) |
+1. **The actuator moves to the "home" position** (safe starting spot).
+2. **It takes a few readings from the strain gauge** to understand the "baseline" (no stress) condition.
+3. **The actuator slowly pushes into a saw tooth.**
+4. While pushing:
+   - It records how much force is being applied.
+   - If the force spikes above a set value, it means the tooth has been contacted.
+   - When the tooth breaks off and the force drops, it stops.
+5. **The actuator returns to the home position.**
+6. The test data is saved as:
+   - A **CSV file** (with timestamps, positions, and force values).
+   - A **plot image** showing stress vs position.
 
 ---
 
-## Personal Usage Notes
+## 🖥️ How to Run the Test
 
-### When to Use Each
+### 1. Start the script:
 
-**Use `task_control.py` for:**
-- Normal operation
-- Need to stop movements quickly
-- Interactive control sessions
-- Quiet operation (no hunting)
-
-**Use `chatgpt_control.py` for:**
-- Debugging issues
-- Understanding what's happening
-- Testing PID parameters
-- Demo/showing others
-
-### Common Commands I Use
 ```bash
-# Quick position check
-> pos
-
-# Move and maybe cancel
-> 80
-> cancel    # if I change my mind
-
-# Slow it down for precision
-> speed 150
-> 75
-
-# Back to normal speed
-> speed 500
+python mechanical_tester.py
 ```
 
-### Troubleshooting
-- **Won't move after cancel**: This is normal - `cancel` locks position until next `move`
-- **Hunting/jerking**: Use `task_control.py` (has position deadband)
-- **Too slow**: Increase speed with `speed <higher_number>`
-- **Too fast**: Decrease speed with `speed <lower_number>`
+### 2. Type a command when prompted:
+
+| Command | What It Does |
+|---------|---------------|
+| `test`  | Runs one full knock-off test |
+| `pos`   | Shows the current actuator position |
+| `home`  | Sends the actuator to its home position |
+| `help`  | Lists all available commands |
+| `quit`  | Stops the script safely |
 
 ---
 
-## Code Architecture (task_control.py)
+## 🧪 Where the Data Goes
 
-### Core Functions
-- `move(target)` - Sets PID setpoint, restores speed if needed
-- `cancel_move()` - Saves speed limits, sets to (0,0) for instant stop
-- `set_speed_limit(pwm)` - Changes max PWM with gentle ramp-down
-- `get_position()` - Raw ADC → calibrated mm position
+After every successful test:
 
-### Async Magic
-- `_control_loop()` - Runs PID continuously in background
-- `get_user_input()` - Non-blocking input using executor
-- `main()` - Command parser + event loop
+- CSV files go in: `tests/csv/mechanical_test_<number>.csv`
+- Plots go in: `tests/plot/test_plot_<number>.png`
 
-### Smart Features
-- **Auto-restore speed**: When you `move()` after `cancel()`, speed limits auto-restore
-- **Position deadband**: Within 0.5mm of target → no PID correction (quiet)
-- **PWM deadband**: PID output <10 → no PWM (prevents tiny movements)
+Each CSV has:
+- Timestamp
+- Actuator position (mm)
+- Force (stress) change from baseline
+- Peak stress seen
+
+Each plot shows:
+- How force changed as the actuator moved
+- The peak force at tooth contact or breakage
+
+---
+
+## 🧠 What’s Special About This Machine
+
+- It’s **automated**: no need to manually push anything.
+- It’s **safe and repeatable**: same position, speed, and force detection every time.
+- It **saves and plots all test data**, so you can analyze how strong each weld was.
+
+---
+
+## 🛠️ Calibration (Important!)
+
+The machine needs to know how far it’s moving. The actuator sends back a voltage, which gets converted to mm using calibration.
+
+### Calibration Data File:
+`config.json`:
+```json
+{
+  "analogs_mv": [221, 310, 380, ..., 1073],
+  "positions_mm": [30.3, 41.4, 50.8, ..., 146.5]
+}
+```
+
+These values are used in `calibration.py` to:
+- Convert **voltage → mm**: `analog_to_mm()`
+- Convert **mm → voltage**: `mm_to_analog()`
+
+Don’t mess with this unless you re-calibrate the actuator!
+
+---
+
+## 🚨 Safety and Troubleshooting
+
+| Problem | What to Check |
+|--------|----------------|
+| No force data | Make sure strain gauge is powered and connected |
+| Actuator doesn’t move | Check RevPi, wiring, and power supply |
+| Test ends too early | Maybe the force didn’t go above the contact threshold |
+| No tooth was detected | Tooth might’ve already been broken off, or not aligned right |
+
+---
+
+## 💻 Software Dependencies
+
+Install these Python packages (if not already):
+
+```bash
+pip install revpimodio2 pymodbus simple-pid numpy pandas matplotlib
+```
+
+---
+
+## ✅ Final Notes for the Next Student
+
+- Run this machine in a **well-aligned test setup**.
+- Always **reset between tests** using the `home` command.
+- Check CSVs and plots to verify results.
+- If things break or stop working, **read the log messages** – they’re there to help.
+- Feel free to improve the script – like adding automation for running many cycles!
+- Feel free to reach out to me or ask ROAN!
+
+Good luck! 🛠️🦷💥
