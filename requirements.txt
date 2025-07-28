@@ -3,7 +3,7 @@
 # 1. Create the environment: python -m venv venv
 # 2. Activate the environment:
 #    - On Windows: venv\Scripts\activate
-#    - On Linux/macOS: source venv/bin/activate
+#    - On Linux/macOS: source venv/bin/activate (you will need to run this command everytime you open a new terminal) (you will notice (.venv) written in terminal)
 # 3. Install dependencies using:
 #    pip install -r requirements.txt
 
