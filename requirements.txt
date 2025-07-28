@@ -1,6 +1,16 @@
-revpimodio2==2.8.0
-simple-pid==2.0.1
-pymodbus==3.9.2
-numpy==2.3.1
-pandas==2.3.0
-matplotlib==3.10.3
+# If you are using a Python virtual environment (WHICH I RECOMMEND)
+# Follow these steps:
+# 1. Create the environment: python -m venv venv
+# 2. Activate the environment:
+#    - On Windows: venv\Scripts\activate
+#    - On Linux/macOS: source venv/bin/activate
+# 3. Install dependencies using:
+#    pip install -r requirements.txt
+
+# Core packages for your project
+revpimodio2==2.8.0         # RevPi Modbus communication
+simple-pid==2.0.1          # PID controller implementation
+pymodbus==3.9.2            # Modbus protocol support
+numpy==2.3.1               # Numerical operations
+pandas==2.3.0              # Data manipulation and analysis
+matplotlib==3.10.3         # Plotting and data visualization
